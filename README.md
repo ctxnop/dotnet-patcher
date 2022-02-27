@@ -107,6 +107,7 @@ public bool Apply(AssemblyDefinition asm)
 			ilp.Emit(OpCodes.Ret);	// This method will now just return and do nothing.
 		}
 	);
+}
 ```
 
 A very early and incomplete support for C# compilation is added, so that you can
