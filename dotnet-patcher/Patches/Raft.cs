@@ -12,14 +12,14 @@ namespace DP.Patches
 	/// Patch the game "Raft".
 	/// </summary>
 	public class Raft
-		: BasePatch
+		: IPatch
 	{
 		#region Properties
 		/// <summary>
 		/// Get the patch Id.
 		/// </summary>
 		/// <value>An Id to reference the patch.</value>
-		public override string Id
+		public string Id
 		{
 			get { return "raft"; }
 		}
@@ -30,7 +30,7 @@ namespace DP.Patches
 		/// Apply this patch on this assembly definition.
 		/// </summary>
 		/// <param name="asm">The assembly definition.</param>
-		public override bool Apply(AssemblyDefinition asm)
+		public bool Apply(AssemblyDefinition asm)
 		{
 			// Infinite durability
 			asm.Patch(

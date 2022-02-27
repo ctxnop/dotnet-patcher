@@ -2,7 +2,7 @@
 using Mono.Cecil;
 #endregion
 
-namespace DP.Patches
+namespace DP
 {
 	/// <summary>
 	/// All patches must implements this interface.
