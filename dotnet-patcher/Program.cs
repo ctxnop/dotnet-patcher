@@ -1,5 +1,6 @@
 ﻿#region References
-using DP.Patches;
+using DP.Compiling;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Mono.Cecil;
 using System;
 using System.Collections.Generic;
@@ -38,20 +39,21 @@ namespace DP
 		static void PrintHelp()
 		{
 			Console.WriteLine(
-				"Usage: \n"                                                        +
-				"    dp <command>\n"                                               +
-				"\n"                                                               +
-				"Commands:\n"                                                      +
-				"   help:  Display this help.\n"                                   +
-				"   dump:  Dump IL code of the specified definitions.\n"           +
-				"   patch: Apply a patch.\n"                                       +
-				"       dp patch <file-to-patch> <patchname>\n"                    +
-				"       Patches:"
+				"Usage: \n"                                                    +
+				"    dp <command>\n"                                           +
+				"\n"                                                           +
+				"Commands:\n"                                                  +
+				"    help:  Display this help.\n"                              +
+				"    dump:  Dump IL code of the specified definitions.\n"      +
+				"        dp dump <Assembly> <Type or Member>\n"                +	
+				"    patch: Apply a patch.\n"                                  +
+				"        dp patch <Assembly> <PatchId>\n"                      +
+				"        Patches:"
 			);
 
 			foreach(IPatch p in s_PatchList)
 			{
-				Console.WriteLine($"           - {p.Id}");
+				Console.WriteLine($"             - {p.Id}");
 			}
 		}
 
@@ -79,8 +81,12 @@ namespace DP
 					PrintHelp();
 					return 0;
 				case "dump":
-					Console.WriteLine("Not yet implemented!");
-					return -1;
+					if (args.Length != 3)
+					{
+						Console.WriteLine("the 'dump' command expect exactly two parameters!");
+						PrintHelp();
+					}
+					return Dump(args[1], args[2]);
 				case "patch":
 					if (args.Length != 3)
 					{
@@ -96,6 +102,12 @@ namespace DP
 			}
 		}
 
+		/// <summary>
+		/// Apply the specified patch on the specified assembly.
+		/// </summary>
+		/// <param name="sourceAssembly">The assembly to patch.</param>
+		/// <param name="patchId">The Id to patch.</param>
+		/// <returns>An exit code, zero on success.</returns>
 		static int Patch(string sourceAssembly, string patchId)
 		{
 			UInt64 count = 0;
@@ -113,16 +125,9 @@ namespace DP
 				File.Copy(sourceAssembly, sourceAssembly + ".dporg");
 			}
 
-			// Create a resolver
-			DefaultAssemblyResolver resolver = new DefaultAssemblyResolver();
-			resolver.AddSearchDirectory(Path.GetDirectoryName(sourceAssembly));
-
 			// Load the assembly definition from the backup so that it's the original
 			// unpatched version.
-			AssemblyDefinition asm = AssemblyDefinition.ReadAssembly(
-				sourceAssembly  + ".dporg",
-				new ReaderParameters { AssemblyResolver = resolver }
-			);
+			AssemblyDefinition asm = Patcher.ReadAssembly(sourceAssembly  + ".dporg");
 
 			// Apply all corresponding patches
 			foreach(IPatch p in s_PatchList)
@@ -147,6 +152,40 @@ namespace DP
 
 			asm.Write(sourceAssembly);
 			Console.WriteLine($"{count} patch(s) applied!");
+			return 0;
+		}
+
+		/// <summary>
+		/// Dump as much informations as possible about the specified type or member.
+		/// </summary>
+		/// <param name="assemblyFile">The assembly to load.</param>
+		/// <param name="what">What to dump infos on.</param>
+		/// <returns>An exist code, zero on success.</returns>
+		static int Dump(string assemblyFile, string what)
+		{
+			// The specified assembly must exists
+			if (!File.Exists(assemblyFile))
+			{
+				Console.WriteLine($"The specified assembly doesn't exists: {assemblyFile}");
+				return -1;
+			}
+
+			// If there is a backup, then use it instead the patched version.
+			if (File.Exists(assemblyFile + ".dporg"))
+				assemblyFile = assemblyFile + ".dporg";
+
+			AssemblyDefinition asm = Patcher.ReadAssembly(assemblyFile);
+
+			CompilationUnitSyntax cus = null;
+			CodeGen.AddTypeDefinition(
+				Patcher.FindTypeDefinition(
+					asm,
+					(td) => string.CompareOrdinal(td.Name, "SteamManager") == 0
+				),
+				ref cus
+			);
+
+			Console.WriteLine(CodeGen.ToString(cus));
 			return 0;
 		}
 	}
