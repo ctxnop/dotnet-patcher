@@ -39,7 +39,7 @@ on any .Net or Mono application. But I still finds it overkill for small
 patching.
 
 Also, I am disappointed by the [Reflexil](http://reflexil.net)'s UI/UX on
-Windows and even more disappointed that there is no Linux's version or it.
+Windows and even more disappointed that there is no Linux's version of it.
 The [AvaloniaILSpy](https://github.com/icsharpcode/AvaloniaILSpy) fork is
 crashing very often, it's UI is full of bugs. It's a huge beast, relying on
 technologies I dislike (WPF for example), so that I don't want to get involved
