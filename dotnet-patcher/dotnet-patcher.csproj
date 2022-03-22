@@ -2,7 +2,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<!--<TargetFramework>net35</TargetFramework>-->
 		<TargetFramework>net6.0</TargetFramework>
 		<LangVersion>latest</LangVersion>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -10,7 +9,6 @@
 		<Nullable>disable</Nullable>
 		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
 
-		<!--<AppDesignerFolder>Properties</AppDesignerFolder>-->
 		<RootNamespace>DP</RootNamespace>
 		<AssemblyName>dp</AssemblyName>
 		<Deterministic>true</Deterministic>
@@ -25,12 +23,6 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CodeAnalysis" Version="4.1.0" />
-		<!--
-		<PackageReference Include="Microsoft.Net.Compilers" Version="4.1.0">
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-			<PrivateAssets>all</PrivateAssets>
-		</PackageReference>
-		-->
 		<PackageReference Include="Mono.Cecil" Version="0.11.4" />
 	</ItemGroup>
 
