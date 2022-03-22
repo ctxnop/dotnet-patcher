@@ -150,6 +150,21 @@ namespace DP
 		}
 
 		/// <summary>
+		/// Find the first FieldDefinition matching the predicate.
+		/// </summary>
+		/// <param name="td">The TypeDefinition to search in.</param>
+		/// <param name="fdm">The predicate to match.</param>
+		/// <returns>The FieldDefinition.</returns>
+		public static FieldDefinition FindFieldDefinition(TypeDefinition td, FieldDefinitionMatcher fdm)
+		{
+			foreach(FieldDefinition fd in td.Fields)
+			{
+				if (fdm(fd)) return fd;
+			}
+			return null;
+		}
+
+		/// <summary>
 		/// Find the first MethodDefinition matching the predicate.
 		/// </summary>
 		/// <param name="asm">The assembly to search in.</param>
@@ -212,6 +227,54 @@ namespace DP
 				Path.GetDirectoryName(filename)
 			);
 			return resolver;
+		}
+
+		public static TypeDefinition T(this AssemblyDefinition ad, string name)
+		{
+			foreach(ModuleDefinition md in ad.Modules)
+			{
+				foreach(TypeDefinition td in md.Types)
+				{
+					if (string.CompareOrdinal(td.FullName, name) == 0) return td;
+				}
+			}
+			return null;
+		}
+
+		public static TypeDefinition T(this TypeDefinition tdp, string name)
+		{
+			foreach(TypeDefinition td in tdp.NestedTypes)
+			{
+				if (string.CompareOrdinal(td.Name, name) == 0) return td;
+			}
+			return null;
+		}
+
+		public static FieldDefinition F(this TypeDefinition td, string name)
+		{
+			foreach(FieldDefinition fd in td.Fields)
+			{
+				if (string.CompareOrdinal(fd.Name, name) == 0) return fd;
+			}
+			return null;
+		}
+
+		public static PropertyDefinition P(this TypeDefinition td, string name)
+		{
+			foreach(PropertyDefinition pd in td.Properties)
+			{
+				if (string.Compare(pd.Name, name) == 0) return pd;
+			}
+			return null;
+		}
+
+		public static MethodDefinition M(this TypeDefinition td, string name)
+		{
+			foreach(MethodDefinition md in td.Methods)
+			{
+				if (string.CompareOrdinal(md.Name, name) == 0) return md;
+			}
+			return null;
 		}
 		#endregion
 	}

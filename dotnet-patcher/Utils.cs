@@ -88,16 +88,11 @@ namespace DP.Patches
 					{
 						if (mm(md))
 						{
-							Console.WriteLine($"===== {md.FullName} =====");
-							Console.WriteLine("---- original ----");
-							Console.Write(md.DumpIl());
-
 							// Call the patcher
 							mp(md.Body.GetILProcessor());
 
 							// Show patched code
-							Console.WriteLine("---- patched ----");
-							Console.Write(md.DumpIl());
+							Console.WriteLine($" - patched: {md.FullName}");
 						}
 					}
 				}
