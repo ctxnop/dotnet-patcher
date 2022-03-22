@@ -80,7 +80,7 @@ in the project's folder, but you may want to keep things tidy so put it in the
 Rebuild the tool using `dotnet build`, then you can patch an assembly using the
 following command:
 ```shell
-./dotnet-patcher/out/net6.0/dp patch <assembly-to-patch>.dll <patch-id>
+./dotnet-patcher/out/net6.0/dp patch <patch-id> <assembly-to-patch>.dll
 ```
 
 Currently, patching an assembly means using Mono.Cecil and requires

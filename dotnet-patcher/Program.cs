@@ -47,7 +47,7 @@ namespace DP
 				"    dump:  Dump IL code of the specified definitions.\n"      +
 				"        dp dump <Assembly> <Type or Member>\n"                +	
 				"    patch: Apply a patch.\n"                                  +
-				"        dp patch <Assembly> <PatchId>\n"                      +
+				"        dp patch <PatchId> <Assembly>\n"                      +
 				"        Patches:"
 			);
 
@@ -105,10 +105,10 @@ namespace DP
 		/// <summary>
 		/// Apply the specified patch on the specified assembly.
 		/// </summary>
-		/// <param name="sourceAssembly">The assembly to patch.</param>
 		/// <param name="patchId">The Id to patch.</param>
+		/// <param name="sourceAssembly">The assembly to patch.</param>
 		/// <returns>An exit code, zero on success.</returns>
-		static int Patch(string sourceAssembly, string patchId)
+		static int Patch(string patchId , string sourceAssembly)
 		{
 			UInt64 count = 0;
 			
