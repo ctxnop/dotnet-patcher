@@ -79,7 +79,7 @@ namespace DP.Commands
 			Console.ForegroundColor = ConsoleColor.Blue;
 			Console.Write("patch1 ... patchN");
 			Console.ResetColor();
-			Console.WriteLine("]\tApply alDisplay help of a specific command.");
+			Console.WriteLine("]\tApply all or specified patches.");
 			Console.WriteLine();
 			Console.WriteLine("\t\tProducts:");
 
