@@ -1,7 +1,6 @@
 #region References
 using Mono.Cecil;
 using Mono.Cecil.Cil;
-using Mono.Collections.Generic;
 using System.Text;
 using System;
 #endregion

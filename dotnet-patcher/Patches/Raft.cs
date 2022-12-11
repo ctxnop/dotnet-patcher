@@ -1,36 +1,22 @@
 #region References
+using System.ComponentModel;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using DP.Compiling;
 #endregion
-
-// This patches files is provided as an example of what it is possible.
 
 namespace DP.Patches
 {
 	/// <summary>
 	/// Patch the game "Raft".
 	/// </summary>
+	[DisplayName("raft"), Description("Raft")]
 	public class Raft
 		: IPatch
 	{
-		#region Properties
-		/// <summary>
-		/// Get the patch Id.
-		/// </summary>
-		/// <value>An Id to reference the patch.</value>
-		public string Id
-		{
-			get { return "raft"; }
-		}
-		#endregion
-
 		#region Methods
-		/// <summary>
-		/// Apply this patch on this assembly definition.
-		/// </summary>
-		/// <param name="asm">The assembly definition.</param>
-		public bool Apply(AssemblyDefinition asm)
+		[DisplayName("durab"), Description("Item have infinite durability.")]
+		public void Durability(AssemblyDefinition asm)
 		{
 			// Infinite durability
 			asm.Patch(
@@ -59,7 +45,11 @@ namespace DP.Patches
 					ilp.Emit(OpCodes.Ret);
 				}
 			);
+		}
 
+		[DisplayName("stats"), Description("No stat depletion.")]
+		public void Stats(AssemblyDefinition asm)
+		{
 			// Reduce stat depletion
 			asm.Patch(
 				(td) => { return string.CompareOrdinal(td.FullName, "Stat_Consumable") == 0; },
@@ -71,85 +61,11 @@ namespace DP.Patches
 					ilp.Emit(OpCodes.Ret);
 				}
 			);
+		}
 
-			// No shark attack
-			asm.Patch(
-				(td) => { return string.CompareOrdinal(td.FullName, "Shark") == 0; },
-				(md) => { return string.CompareOrdinal(md.Name, "ChangeState") == 0; },
-				(ilp) => {
-
-					// Insert first block
-					Instruction next = ilp.Body.Instructions[0];
-					ilp.InsertBefore(next, ilp.Create(OpCodes.Ldarg_1));
-					ilp.InsertBefore(next, ilp.Create(OpCodes.Ldc_I4_2));
-					ilp.InsertBefore(next, ilp.Create(OpCodes.Bne_Un_S, next));
-					ilp.InsertBefore(next, ilp.Create(OpCodes.Ret));
-
-					// Insert second block
-					next = ilp.Body.Instructions[0];
-					ilp.InsertBefore(next, ilp.Create(OpCodes.Ldarg_1));
-					ilp.InsertBefore(next, ilp.Create(OpCodes.Ldc_I4_4));
-					ilp.InsertBefore(next, ilp.Create(OpCodes.Bne_Un_S, next));
-					ilp.InsertBefore(next, ilp.Create(OpCodes.Ret));
-
-					// Insert thrid block
-					next = ilp.Body.Instructions[0];
-					ilp.InsertBefore(next, ilp.Create(OpCodes.Ldarg_0));
-					ilp.InsertBefore(next, ilp.Create(OpCodes.Ldc_I4_1));
-					ilp.InsertBefore(next, ilp.Create(OpCodes.Stfld, ilp.FieldRef("hasBitten")));
-					ilp.InsertBefore(next, ilp.Create(OpCodes.Ldarg_0));
-					ilp.InsertBefore(next, ilp.Create(OpCodes.Ldc_I4_0));
-					ilp.InsertBefore(next, ilp.Create(OpCodes.Stfld, ilp.FieldRef("canAttack")));
-				}
-			);
-
-			asm.Patch(
-				(td) => { return string.CompareOrdinal(td.FullName, "Shark") == 0; },
-				(md) => { return string.CompareOrdinal(md.Name, "Attack") == 0; },
-				(ilp) => {
-					ilp.Clear();
-					ilp.Emit(OpCodes.Ldarg_0);
-					ilp.Emit(OpCodes.Ldc_I4_1);
-					ilp.Emit(OpCodes.Stfld, ilp.FieldRef("hasBitten"));
-					ilp.Emit(OpCodes.Ldarg_0);
-					ilp.Emit(OpCodes.Ldc_I4_0);
-					ilp.Emit(OpCodes.Stfld, ilp.FieldRef("canAttack"));
-					ilp.Emit(OpCodes.Ret);
-				}
-			);
-
-			asm.Patch(
-				(td) => { return string.CompareOrdinal(td.FullName, "Shark") == 0; },
-				(md) => { return string.CompareOrdinal(md.Name, "Update") == 0; },
-				(ilp) => {
-					Instruction next = ilp.Body.Instructions[0];
-					ilp.InsertBefore(next, ilp.Create(OpCodes.Ldarg_0));
-					ilp.InsertBefore(next, ilp.Create(OpCodes.Ldc_I4_1));
-					ilp.InsertBefore(next, ilp.Create(OpCodes.Stfld, ilp.FieldRef("hasBitten")));
-					ilp.InsertBefore(next, ilp.Create(OpCodes.Ldarg_0));
-					ilp.InsertBefore(next, ilp.Create(OpCodes.Ldc_I4_0));
-					ilp.InsertBefore(next, ilp.Create(OpCodes.Stfld, ilp.FieldRef("canAttack")));
-					ilp.InsertBefore(next, ilp.Create(OpCodes.Ldarg_0));
-					ilp.InsertBefore(next, ilp.Create(OpCodes.Ldc_I4_0));
-					ilp.InsertBefore(next, ilp.Create(OpCodes.Stfld, ilp.FieldRef("bitingRaft")));
-					ilp.InsertBefore(next, ilp.Create(OpCodes.Ldarg_0));
-					ilp.InsertBefore(next, ilp.Create(OpCodes.Ldc_R4, 0.0f));
-					ilp.InsertBefore(next, ilp.Create(OpCodes.Stfld, ilp.FieldRef("biteRaftTimer")));
-				}
-			);
-
-			asm.Patch(
-				(td) => { return string.CompareOrdinal(td.FullName, "Shark") == 0; },
-				(md) => { return string.CompareOrdinal(md.Name, "OnDamageTaken") == 0; },
-				(ilp) => {
-					Instruction next = ilp.Body.Instructions[0];
-					ilp.InsertBefore(next, ilp.Create(OpCodes.Ldc_R4, 20.0f));
-					ilp.InsertBefore(next, ilp.Create(OpCodes.Ldarg_1));
-					ilp.InsertBefore(next, ilp.Create(OpCodes.Mul));
-					ilp.InsertBefore(next, ilp.Create(OpCodes.Starg, 1));
-				}
-			);
-
+		[DisplayName("weapon"), Description("Melee weapon hist from far away and really hard")]
+		public void Weapon(AssemblyDefinition asm)
+		{
 			asm.Patch(
 				(td) => { return string.CompareOrdinal(td.FullName, "MeleeWeapon") == 0; },
 				(md) => { return string.CompareOrdinal(md.Name, "Start") == 0; },
@@ -174,7 +90,11 @@ namespace DP.Patches
 					ilp.InsertBefore(ip, ilp.Create(OpCodes.Mul));
 				}
 			);
+		}
 
+		[DisplayName("items"), Description("Infinite items")]
+		public void InifniteItems(AssemblyDefinition asm)
+		{
 			asm.Patch(
 				(td) => { return string.CompareOrdinal(td.FullName, "ItemInstance") == 0; },
 				(md) => { return string.CompareOrdinal(md.Name, "set_Uses") == 0; },
@@ -211,8 +131,6 @@ namespace DP.Patches
 					ilp.InsertBefore(start, ilp.Create(OpCodes.Starg, 1));
 				}
 			);
-
-			return true;
 		}
 		#endregion
 	}

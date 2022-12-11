@@ -1,4 +1,5 @@
 #region References
+using System.ComponentModel;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using DP.Compiling;
@@ -9,28 +10,15 @@ using DP.Compiling;
 namespace DP.Patches
 {
 	/// <summary>
-	/// Patch the game "Raft".
+	/// Patch the game "Kingdom Two Crowns".
 	/// </summary>
+	[DisplayName("k2c"), Description("Kingdom Two Crowns")]
 	public class K2c
 		: IPatch
 	{
-		#region Properties
-		/// <summary>
-		/// Get the patch Id.
-		/// </summary>
-		/// <value>An Id to reference the patch.</value>
-		public string Id
-		{
-			get { return "k2c"; }
-		}
-		#endregion
-
 		#region Methods
-		/// <summary>
-		/// Apply this patch on this assembly definition.
-		/// </summary>
-		/// <param name="asm">The assembly definition.</param>
-		public bool Apply(AssemblyDefinition asm)
+		[DisplayName("money"), Description("Always have at least one coin and one gem.")]
+		public void CoinAndGem(AssemblyDefinition asm)
 		{
 			// No stamina loss on running, always have at least one coin and one gem (everything is free basically)
 			asm.Patch(
@@ -42,64 +30,13 @@ namespace DP.Patches
 						if (_wallet.coins == 0) _wallet.coins = 1;
 						if (_wallet.gems == 0) _wallet.gems = 1;
 					", "public Wallet _wallet;");
-
-					/* OpCode Method
-					// Finds required references
-					TypeDefinition Player = Patcher.GetTypeDefinition(ilp);
-					FieldDefinition Player_wallet = Player.F("_wallet");
-					FieldDefinition Player_steed = Player.F("_steed");
-
-					TypeDefinition Wallet = Player_wallet.FieldType.Resolve();
-					MethodDefinition Wallet_get_coins = Wallet.M("get_coins");
-					MethodDefinition Wallet_set_coins = Wallet.M("set_coins");
-					MethodDefinition Wallet_get_gems = Wallet.M("get_gems");
-					MethodDefinition Wallet_set_gems = Wallet.M("set_gems");
-
-					TypeDefinition Steed = Player_steed.FieldType.Resolve();
-					FieldDefinition Steed_runStaminaRate = Steed.F("runStaminaRate");
-
-					// Prefix method
-					Instruction start = ilp.Body.Instructions[0];
-
-					// if (_wallet.coins == 0) {
-					ilp.InsertBefore(start, ilp.Create(OpCodes.Ldarg_0));
-					ilp.InsertBefore(start, ilp.Create(OpCodes.Ldfld, Player_wallet));
-					ilp.InsertBefore(start, ilp.Create(OpCodes.Callvirt, Wallet_get_coins));
-					ilp.InsertBefore(start, ilp.Create(OpCodes.Ldc_I4_0));
-					Instruction b1 = start.Previous;
-					// _wallet.coin = 1;
-					ilp.InsertBefore(start, ilp.Create(OpCodes.Ldarg_0));
-					ilp.InsertBefore(start, ilp.Create(OpCodes.Ldfld, Player_wallet));
-					ilp.InsertBefore(start, ilp.Create(OpCodes.Ldc_I4_1));
-					ilp.InsertBefore(start, ilp.Create(OpCodes.Callvirt, Wallet_set_coins));
-					Instruction l1 = start.Previous; // }
-
-					// if (_wallet.gems == 0) {
-					ilp.InsertBefore(start, ilp.Create(OpCodes.Ldarg_0));
-					ilp.InsertBefore(start, ilp.Create(OpCodes.Ldfld, Player_wallet));
-					ilp.InsertBefore(start, ilp.Create(OpCodes.Callvirt, Wallet_get_gems));
-					ilp.InsertBefore(start, ilp.Create(OpCodes.Ldc_I4_0));
-					Instruction b2 = start.Previous;
-					// _wallet.gems = 1;
-					ilp.InsertBefore(start, ilp.Create(OpCodes.Ldarg_0));
-					ilp.InsertBefore(start, ilp.Create(OpCodes.Ldfld, Player_wallet));
-					ilp.InsertBefore(start, ilp.Create(OpCodes.Ldc_I4_1));
-					ilp.InsertBefore(start, ilp.Create(OpCodes.Callvirt, Wallet_set_gems));
-					Instruction l2 = start.Previous; // }
-
-					// _steed.runStaminaRate = 0;
-					ilp.InsertBefore(start, ilp.Create(OpCodes.Ldarg_0));
-					ilp.InsertBefore(start, ilp.Create(OpCodes.Ldfld, Player_steed));
-					ilp.InsertBefore(start, ilp.Create(OpCodes.Ldc_R4, 0f));
-					ilp.InsertBefore(start, ilp.Create(OpCodes.Stfld, Steed_runStaminaRate));
-					
-					// Now that all the opcodes are known, add the branching
-					ilp.InsertAfter(b1, ilp.Create(OpCodes.Bne_Un, l1.Next));
-					ilp.InsertAfter(b2, ilp.Create(OpCodes.Bne_Un, l2.Next));
-					*/
 				}
 			);
+		}
 
+		[DisplayName("beggars"), Description("Increase beggers max number and spawn rate.")]
+		public void BeggarSpawn(AssemblyDefinition asm)
+		{
 			// Beggar max spawn and spawn rate
 			asm.Patch(
 				(td) => string.CompareOrdinal(td.FullName, "BeggarCamp") == 0,
@@ -131,7 +68,11 @@ namespace DP.Patches
 					ilp.Emit(OpCodes.Ret);
 				}
 			);
+		}
 
+		[DisplayName("units"), Description("Units can't be demoted and don't drop items.")]
+		public void ProtectUnits(AssemblyDefinition asm)
+		{
 			// Units can't be demoted
 			asm.Patch(
 				(td) => string.CompareOrdinal(td.FullName, "Character") == 0,
@@ -153,8 +94,11 @@ namespace DP.Patches
 					ilp.Append(ilp.Create(OpCodes.Ret));
 				}
 			);
+		}
 
-			// Walls can't be destroyed
+		[DisplayName("wall"), Description("Wall can't be destroyed.")]
+		public void IndestructibleWalls(AssemblyDefinition asm)
+		{
 			asm.Patch(
 				(td) => string.CompareOrdinal(td.FullName, "Wall") == 0,
 				(md) => string.CompareOrdinal(md.Name, "Start") == 0,
@@ -174,8 +118,11 @@ namespace DP.Patches
 					ilp.InsertBefore(start, ilp.Create(OpCodes.Callvirt, Damageable_set_invulnerable));
 				}
 			);
+		}
 
-			// Always at least one citizen to hire
+		[DisplayName("hire"), Description("Always at least one citizen to hire.")]
+		public void CitizensHireable(AssemblyDefinition asm)
+		{
 			asm.Patch((td) => string.CompareOrdinal(td.FullName, "CitizenHousePayable") == 0,
 				(md) => string.CompareOrdinal(md.Name, "Update") == 0,
 				(ilp) => {
@@ -196,7 +143,11 @@ namespace DP.Patches
 					ilp.Append(ret);
 				}
 			);
+		}
 
+		[DisplayName("grab"), Description("Squids can't grab citizens.")]
+		public void SquidGrab(AssemblyDefinition asm)
+		{
 			// Squids can't grab citizens
 			asm.Patch((td) => string.CompareOrdinal(td.FullName, "Squid") == 0,
 				(md) => string.CompareOrdinal(md.Name, "GetClosestTarget") == 0,
@@ -216,7 +167,11 @@ namespace DP.Patches
 					ilp.Emit(OpCodes.Ret);
 				}
 			);
+		}
 
+		[DisplayName("weak"), Description("Squids are easy to kill.")]
+		public void SquidWeak(AssemblyDefinition asm)
+		{
 			// Squids have almost no hitpoints
 			asm.Patch((td) => string.CompareOrdinal(td.FullName, "Squid") == 0,
 				(md) => string.CompareOrdinal(md.Name, "Awake") == 0,
@@ -237,22 +192,22 @@ namespace DP.Patches
 					ilp.Emit(OpCodes.Ret);
 				}
 			);
+		}
 
-			// Arrow damages
+		[DisplayName("arrow"), Description("Increase arrow damage.")]
+		public void ArrowDamage(AssemblyDefinition asm)
+		{
 			asm.Patch(
 				(td) => string.CompareOrdinal(td.FullName, "Arrow") == 0,
 				(md) => md.IsConstructor,
 				(ilp) => {
-					//ilp.Clear();
 					//1 = hitdamage
 					ilp.Replace(ilp.Body.Instructions[1], ilp.Create(OpCodes.Ldc_I4_8));
-					//13 ! damagePerTicks
+					//13 = damagePerTicks
 					ilp.Replace(ilp.Body.Instructions[13], ilp.Create(OpCodes.Ldc_I4_8));
 
 				}
 			);
-
-			return true;
 		}
 		#endregion
 	}

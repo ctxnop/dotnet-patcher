@@ -1,10 +1,8 @@
 ﻿#region References
-using DP.Compiling;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Mono.Cecil;
+using DP.Commands;
+using DP.Utils;
 using System;
 using System.Collections.Generic;
-using System.IO;
 #endregion
 
 namespace DP
@@ -14,49 +12,6 @@ namespace DP
 	/// </summary>
 	internal class Program
 	{
-		#region Variables
-		private static List<IPatch> s_PatchList = new List<IPatch>();
-		#endregion
-
-		/// <summary>
-		/// Load the patches.
-		/// </summary>
-		private static void LoadPatches()
-		{
-			if (s_PatchList.Count > 0) return;
-			foreach(Type t in typeof(IPatch).Assembly.ExportedTypes)
-			{
-				if (!t.IsAbstract && typeof(IPatch).IsAssignableFrom(t))
-				{
-					s_PatchList.Add(Activator.CreateInstance(t) as IPatch);
-				}
-			}
-		}
-
-		/// <summary>
-		/// Display the help message.
-		/// </summary>
-		static void PrintHelp()
-		{
-			Console.WriteLine(
-				"Usage: \n"                                                    +
-				"    dp <command>\n"                                           +
-				"\n"                                                           +
-				"Commands:\n"                                                  +
-				"    help:  Display this help.\n"                              +
-				"    dump:  Dump IL code of the specified definitions.\n"      +
-				"        dp dump <Assembly> <Type or Member>\n"                +	
-				"    patch: Apply a patch.\n"                                  +
-				"        dp patch <PatchId> <Assembly>\n"                      +
-				"        Patches:"
-			);
-
-			foreach(IPatch p in s_PatchList)
-			{
-				Console.WriteLine($"             - {p.Id}");
-			}
-		}
-
 		/// <summary>
 		/// Application's entry point.
 		/// </summary>
@@ -64,44 +19,37 @@ namespace DP
 		/// <returns>An exit code, zero on success.</returns>
 		static int Main(string[] args)
 		{
-			// Load the patches
-			LoadPatches();
-
-			// There must be at least one command.
-			if (args.Length == 0)
+			try
 			{
-				PrintHelp();
-				return -1;
+				// If no arguments, display help and exit on error.
+				if (args.Length == 0)
+					throw new Exception("No command specified");
+
+				ICommand cmd = Reflection.MakeFromName<ICommand>(args[0]);
+				if (cmd == null)
+					throw new Exception($"Unknown command: {args[0]}");
+
+				// Add others arguments in command line
+				List<string> options = new List<string>();
+				for(int i = 1; i < args.Length; ++i)
+					options.Add(args[i]);
+
+				// Run the command
+				return cmd.Run(options);
 			}
-
-			// First param is supposed to be the command
-			switch(args[0])
+			catch(Exception ex)
 			{
-				case "help":
-					PrintHelp();
-					return 0;
-				case "dump":
-					if (args.Length != 3)
-					{
-						Console.WriteLine("the 'dump' command expect exactly two parameters!");
-						PrintHelp();
-					}
-					return Dump(args[1], args[2]);
-				case "patch":
-					if (args.Length != 3)
-					{
-						Console.WriteLine("the 'patch' command expect exactly two parameters!");
-						PrintHelp();
-						return -1;
-					}
-					return Patch(args[1], args[2]);
-				default:
-					Console.WriteLine($"Unknown command: {args[0]}");
-					PrintHelp();
-					return -1;
+				Console.Write("[");
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.Write("ERROR");
+				Console.ResetColor();
+				Console.WriteLine("] " + ex.Message);
+				(new HelpCommand()).Run(new List<string>());
+				return -1;
 			}
 		}
 
+/*
 		/// <summary>
 		/// Apply the specified patch on the specified assembly.
 		/// </summary>
@@ -111,7 +59,7 @@ namespace DP
 		static int Patch(string patchId , string sourceAssembly)
 		{
 			UInt64 count = 0;
-			
+
 			// The specified assembly must exists
 			if (!File.Exists(sourceAssembly))
 			{
@@ -142,7 +90,7 @@ namespace DP
 					count++;
 				}
 			}
-			
+
 			// If no patches were applied, then it's an error.
 			if (count == 0)
 			{
@@ -188,5 +136,6 @@ namespace DP
 			Console.WriteLine(CodeGen.ToString(cus));
 			return 0;
 		}
+*/
 	}
 }
