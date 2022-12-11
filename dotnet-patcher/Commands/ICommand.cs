@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 #endregion
 
-namespace DP
+namespace DP.Commands
 {
 	/// <summary>
 	/// Interface that all commands must implement.

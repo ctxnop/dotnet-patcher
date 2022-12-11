@@ -1,8 +1,7 @@
 #region References
-using Mono.Cecil;
 #endregion
 
-namespace DP
+namespace DP.Patches
 {
 	/// <summary>
 	/// All patches must implements this interface.

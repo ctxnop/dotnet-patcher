@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Reflection;
 using Mono.Cecil;
+using DP.Patches;
 using DP.Utils;
 #endregion
 
@@ -27,7 +28,7 @@ namespace DP.Commands
 
 			if (!File.Exists(assemblyFile + ".dporg"))
 				File.Copy(assemblyFile, assemblyFile + ".dporg");
-			AssemblyDefinition asm = AssemblyDefinition.ReadAssembly(assemblyFile + ".dporg");
+			AssemblyDefinition asm = Patcher.ReadAssembly(assemblyFile + ".dporg");
 
 			IPatch p = Reflection.MakeFromName<IPatch>(product);
 
