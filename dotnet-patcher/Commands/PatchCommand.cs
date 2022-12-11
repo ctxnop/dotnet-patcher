@@ -13,7 +13,7 @@ namespace DP.Commands
 	/// <summary>
 	/// The 'patch' command.
 	/// </summary>
-	[DisplayName("patch"), Description("Patch and assembly.")]
+	[DisplayName("patch"), Description("Patch an assembly.")]
 	public class PatchCommand
 		: ICommand
 	{
